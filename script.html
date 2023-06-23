@@ -1,0 +1,649 @@
+    <script src="https://www.ninenik.com/js/jquery.datetimepicker.js"></script>
+    <script type="text/javascript" src="https://www.ninenik.com/js/moment-with-locales.min.js"></script>    
+
+
+<script>
+
+  let datashow // ข้อมูลจาก Sheet รายชื่อนักเรียน (Array)
+  let statuscheck //สถานะของคะแนนว่าเป็นความดี หรือ ความผิด
+  let dropdownset  //เก็บข้อมูล Dropdown list (OBJECT)
+  let classroomStd //ห้องเรียน ชั้น ปี
+  let objSearchincrud //ข้อมูลที่ค้นหาเจอในช่อง navbar input ค้นหา
+  // รูปภาพ logo
+  let urlLogo = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTwv6oYKBph2b7d8fbapRf9Pu83VlHysjiQR4464EGPCUQv0t5t"
+
+
+// start เรียกข้อมูลมาเก็บที่ตัวแปล จาก ฟังก์ชั่น getData ฝั่ง GS 
+$( document ).ready(function() {
+    pageChange("loginBox")    
+      google.script.run.withSuccessHandler((resEvents)=>{
+        datashow = resEvents
+        showDataDropdown()        
+        getBase64FromUrl(urlLogo).then(console.log) 
+      }).getData()
+});
+
+// Object Dropdownlist
+ function showDataDropdown(){
+  google.script.run.withSuccessHandler((resDD)=>{
+      dropdownset = resDD
+      createDropdownFromOBJECT_B()
+
+  }).getDataDropDownMain()
+}
+
+/** เปรียบเทียบ ประเภทการบันทึกคะแนนความผิดหรือความดี */
+function showStatusKanan(){
+    statuscheck = displayRadioValue()
+    console.log(statuscheck)
+    let list = statuscheck === "ความผิด" ? createDropdownFromOBJECT_A() : createDropdownFromOBJECT_B()
+}
+
+function displayRadioValue() {
+    var ele = document.getElementsByName('switch-one');
+
+    for (i = 0; i < ele.length; i++) {
+        if (ele[i].checked)
+            return ele[i].value
+    }
+}
+
+// ส่วนของ การทำงานของ ตัวรายการที่แสดงคะแนนพฤติกรรม
+    const idstdInput = document.querySelector("#idstd") //input รหัสนักเรียน
+    const namestdInput = document.querySelector("#namestd") //input ชื่อนักเรียน ถูกซ่อน
+    const listkananInput = document.querySelector("#listkanan") //พฤติกรรม
+    const scorebadInput = document.querySelector("#scorebad") //คะแนน
+    const formKanan = document.querySelector("#formkanan")  //ฟอร์มบันทึก
+    const datekanan = document.querySelector("#datekanan") //วันที่ดำเนินการ
+
+/** check Input length ID & Show detail*/
+    $(idstdInput).on('input', function() {
+        idSearch = $(idstdInput).val();
+
+        if(idSearch.length >=  4 ){
+            $("#spinner").removeClass("d-none");
+            let resFilter = datashow.filter((f)=>{ return f[0]===idSearch })[0]
+            if( resFilter == undefined ){
+                formKanan.reset()
+            }else{
+              classroomStd = `${resFilter[2]} ห้อง ${resFilter[3]}`
+              let teacher = $("#displayname").html()
+              $("#showText1").html(`<i class="fa-solid fa-user"></i> ${resFilter[1]}`)
+              $("#showText2").html(`${resFilter[2]} ห้อง ${resFilter[3]}`)
+              $("#picShow").attr("src", resFilter[4]);
+              $(namestdInput).val(resFilter[1])
+              $("#teacher").val(teacher)
+
+              google.script.run.withSuccessHandler((resObj)=>{
+                const objKananlist = resObj[0].kananlist                      
+                  setKanan_s(objKananlist)
+                  $("#spinner").addClass("d-none");
+                  objSearchincrud = objKananlist
+                  
+              }).getDataKanan(idSearch)
+            }                    
+        }else{
+            $("#textifimg").addClass("d-none");
+            $("#idlist").val("") 
+            $("#sumkananA").html("")
+            $("#sumkananB").html("")
+            $(namestdInput).val("")
+            $("#showText1").html("")
+            $("#showText2").html("")
+            $("#datekanan").val("")
+            $(listkananInput).val("")   
+            $(scorebadInput).val("")   
+            $("#picShow").attr("src", "https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/User-avatar.svg/1024px-User-avatar.svg.png");
+            $(".showListKanan").html("")
+            $("#teacher").val("")
+            // formKanan.reset()
+        }
+      });
+
+/** สร้าง Dropdownlist จาก object  ความผิด */
+
+let selector = document.querySelector("#typetitle")
+
+function createDropdownFromOBJECT_A(){
+  let data = dropdownset[0].listmainA
+  selector.innerHTML = ""
+  selector.innerHTML = `<option disabled selected>เลือกประเภทพฤติกรรม</option>`
+      data.forEach(function(item){
+      let selectlist 
+        selectlist = item.listA
+      var option = document.createElement('option');
+      option.value = selectlist;
+      option.innerHTML = selectlist;
+      selector.appendChild(option)
+    })
+}
+
+
+/** สร้าง Dropdownlist จาก object  ความดี*/
+
+function createDropdownFromOBJECT_B(){
+  let data = dropdownset[0].listmainB
+  selector.innerHTML = ""
+  selector.innerHTML = `<option disabled selected>เลือกประเภทความดี</option>`
+      data.forEach(function(item){
+      let selectlist 
+        selectlist = item.listB
+      var option = document.createElement('option');
+      option.value = selectlist;
+      option.innerHTML = selectlist;
+      selector.appendChild(option)
+    })
+}
+
+//** submit Form */
+function addkanan(e){
+  event.preventDefault()
+  $("#spinBtn").removeClass("d-none");
+  $("#addBtn").addClass("d-none");
+
+  console.log(e.idlist.val)
+  const keyId = idstdInput.value
+  const num = parseFloat(e.scorebad.value.replace(/,/g, ''));
+            e.kanantype = statuscheck
+            e.scorebad = num
+
+  //ตรวจสอบค่าว่างก่อน
+  if(namestdInput.value && listkananInput.value && datekanan.value ){
+      google.script.run.withSuccessHandler((resObj)=>{
+        console.log(resObj)
+        const objKananlist = resObj[0].kananlist   
+        objSearchincrud = objKananlist
+
+        $("#idlist").val("") 
+        $("#datekanan").val("") 
+        $("#typetitle").val("") 
+        $("#listkanan").val("") 
+        $("#scorebad").val("") 
+        $("#p_namestd").html("")
+        $("#upImg_std").val("")
+  
+        $("#spinBtn").addClass("d-none");
+        $("#addBtn").removeClass("d-none");
+        $("#textifimg").addClass("d-none");
+
+        setKanan_s(objKananlist)      
+        Swal.fire({
+          position: 'top-end',
+          icon: 'success',
+          title: 'Sheets has been saved',
+          showConfirmButton: false,
+          timer: 1500
+        })
+
+      }).mainData_B(e)    
+  }else{
+        $("#spinBtn").addClass("d-none");
+        $("#addBtn").removeClass("d-none");
+  }
+
+}
+
+/**  set ค่าต่างๆ ที่ได้มาแสดงที่ตัว card เป็น แบบ Template HTML  */
+
+let htmls = ""
+let htmls_table = ""
+let html_progreesBar =""
+
+function setKanan_s(objKananlist){
+  htmls = ""
+  htmls_table = ""
+  html_progreesBar =""
+  let sum_B = 0
+  let sum_A = 0
+  const kanantype_A = objKananlist.filter(f => f.kanantype === "ความดี" ) 
+  const kanantype_B = objKananlist.filter(f => f.kanantype === "ความผิด") 
+  console.log("ความดี",kanantype_A)
+  console.log("ความผิด",kanantype_B)
+
+  if(kanantype_A.length>0){
+    sum_A = kanantype_A.map(o => Number(o.kanan)).reduce((a, c) => { return a + c });
+  }
+  sum_A = sum_A===0 ? "" : sum_A
+
+  if(kanantype_B.length>0){
+    sum_B = kanantype_B.map(o => Number(o.kanan)).reduce((a, c) => { return a + c });
+  }
+  sum_B = sum_B===0 ? "" : sum_B
+  let subtotal = sum_A - sum_B
+  console.log(subtotal)
+
+  setprintHTML(kanantype_A, kanantype_B, sum_A, sum_B, subtotal) // ส่งข้อมูลไปฟังก์ชั่น สำหรับออกรายงาน
+
+  objKananlist.forEach(({kanan,datekanan,title,detial,idlist,teacher, kanantype, imgstd },index)=>{
+    switch (kanantype) {
+    case "ความดี":
+      color = "#00DFA2";
+      showsymbol = `<i class="bi bi-hand-thumbs-up"></i>` 
+      break;   
+    default:
+      color = "#E0144C";
+      showsymbol = `<i class="bi bi-hand-thumbs-down"></i>` 
+    }
+ 
+      htmls += 
+        `
+    <div class="col-md-6">
+
+    <div class="list-group pb-2" style="box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);" >
+
+      <a class="list-group-item list-group-item-action" aria-current="true" style="border-left: 8px solid ${color};" onmouseover="document.querySelector('#hint${index}').style.display='block';"  onmouseout="document.querySelector('#hint${index}').style.display='none';">
+
+        <div class="d-flex w-100 justify-content-between d-flex justify-content-between align-items-center">
+
+          <h6 class="mb-2" style="color: #00DFA2; font-size: 1rem"><i class="bi bi-calendar-week"></i> ${datekanan} </h6>
+
+          <span id="hint${index}" onclick="delcard(this)" data-idlist="${idlist}" style="cursor: pointer; color: #FF597B; display: none;"><i class="bi bi-trash-fill fs-5"></i></span>
+
+        </div>
+
+          <h6 class="fw-bold" style="color: #FF597B; font-size: 1rem pb-1">${showsymbol} ${title} |<i class="bi bi-arrow-down-circle"></i> ${kanan} คะแนน</h6>
+
+        <p class="text-truncate mb-1" style="color: #00DFA2;">${detial}</p>
+
+        <div class="d-flex justify-content-between align-items-center">
+        <div>
+        <span onclick="openmodalDetail(this)" style="color: #FF597B; cursor: pointer;" data-imgstd="${imgstd}" data-title="${title}" data-detial="${detial}"><i class="bi bi-image"></i></span>
+
+        <span class="ms-3" style="cursor: pointer; color: #FF597B;" onclick="updatecard(this)" data-idlist="${idlist}" data-kanan="${kanan}" data-datekanan="${datekanan}" data-title="${title}" data-detial="${detial}" data-kanantype="${kanantype}" data-imgstd="${imgstd}" ><i class="bi bi-pencil-square"></i></span>
+        </div>
+        <span style="color: #FF597B;">${teacher}</span>
+        
+        </div>
+      </a>
+    </div>
+    </div> ` 
+
+  })
+//ส่วน Progresbar
+    html_progreesBar += `
+    <div class="progress" >
+      <div class="progress-bar progress-bar-striped bg-success progress-bar-animated bg-success" role="progressbar" aria-label="Basic example" style="width: ${subtotal}%" aria-valuenow=${subtotal} aria-valuemin="0" aria-valuemax="100">${subtotal}</div>
+    </div>`
+
+        $(".showListKanan").html(htmls)
+        $("#sumkananB").html(sum_B)
+        $("#sumkananA").html(sum_A)
+        // $("#listtable").html(htmls_table)
+        $("#progressBar").html(html_progreesBar)
+
+}
+
+// set ค่าต่างๆ แสดงในรายงานเตรียม Print Out
+function setprintHTML(kanantype_A, kanantype_B, sum_A, sum_B, subtotal){
+  htmls_table = ""
+  console.log(kanantype_A)
+  sum_A = sum_A > 0 ? sum_A : 0
+  sum_B = sum_B > 0 ? sum_B : 0
+
+              htmls_table += 
+              `
+                    <tr>
+                      <th colspan="5" class="fw-bold">รายการคะแนนความดี</th>
+                    </tr>
+              `
+  kanantype_A.forEach(({kanan,datekanan,title,detial,idlist,teacher, kanantype, imgstd },index)=>{
+
+//รายละเอียดนักเรียนของรายงานต่อคน
+            $("#p_namestd").html(`ชื่อนักเรียน : ${namestdInput.value}` )
+            $("#p_idstd").html(`รหัสประจำตัว : ${idstdInput.value}` )
+            $("#p_roomstd").html(`ชั้นปี/ห้อง : ${classroomStd}` )
+
+//รายละเอียดนักเรียนของรายงานต่อครั้ง
+            $("#c_roomstd").html(`เรียนครูที่ปรึกษา ห้อง : ${classroomStd}` )            
+            $("#line1").html(`งานปกครอง ขอชื่นชมนักเรียน ในความดูแลของท่าน ได้แก่ :  ${namestdInput.value} ` )
+            $("#line2").html(`รหัสประจำตัวนักเรียน ${idstdInput.value}` )
+
+
+            htmls_table += 
+              `
+                  <tr>
+                    <td class="text-center" style="font-size:10px">${index+1}</td>
+                    <td class="text-center" style="font-size:10px">${datekanan.split(" ")[0]}</td>
+                    <td style="font-size:12px" class="text-truncate">${detial}</td>
+                    <td class="text-center" style="font-size:13px">${kanan}</td>
+                    <td class="text-center" style="font-size:12px">${teacher}</td>
+                  </tr> 
+              `
+  })
+            htmls_table += 
+              `
+                    <tr>
+                      <th colspan="5 class="fw-bold"">รายการคะแนนผิดระเบียบ</th>
+                    </tr>
+              `
+  kanantype_B.forEach(({kanan,datekanan,title,detial,idlist,teacher, kanantype, imgstd },index)=>{
+
+            htmls_table += 
+              `
+                  <tr>
+                    <td class="text-center" style="font-size:10px">${index+1}</td>
+                    <td class="text-center" style="font-size:10px">${datekanan.split(" ")[0]}</td>
+                    <td style="font-size:12px" class="text-truncate">${detial}</td>
+                    <td class="text-center" style="font-size:13px">${kanan}</td>
+                    <td class="text-center" style="font-size:12px">${teacher}</td>
+                  </tr> 
+              `
+  })              
+
+
+            htmls_table += 
+              `
+                  <tr>
+                    <td colspan="3" class="text-end" style="font-size:12px"> รวมคะแนนความดี </td>
+                    <td class="text-95 text-center" style="font-size:12px">${sum_A}</td>
+                    <td class="text-center text-secondary-d2" style="font-size:12px">คะแนน</td>
+                  </tr> 
+                  <tr>
+                    <td colspan="3" class="text-end" style="font-size:12px"> รวมคะแนนผิดระเบียบ </td>
+                    <td class="text-95 text-center" style="font-size:12px">${sum_B}</td>
+                    <td class="text-center text-secondary-d2" style="font-size:12px">คะแนน</td>
+                  </tr>      
+                  <tr>
+                    <td colspan="3" class="text-end" style="font-size:12px"> คะแนนความประพฤติ </td>
+                    <td class="text-95 text-center" style="font-size:12px">${subtotal}</td>
+                    <td class="text-center text-secondary-d2" style="font-size:12px">คะแนน</td>
+                  </tr>                                 
+              `
+    $("#listtable").html(htmls_table)
+
+}
+
+
+function openmodalDetail(e){
+  $("#imgproDetail").attr("src", e.dataset.imgstd)
+  $("#titleModalImg").html(e.dataset.title)
+  $("#btnShowDtail").click()
+}
+
+function openmodalIMGLink(){
+  $("#btnShowDtail").click()
+}
+
+
+// function cardReport(e){
+//   console.log("print")
+//   event.preventDefault()
+//   pageChange("report_B")
+
+//   window.print()
+//   pageChange("kananPage")
+
+
+// // report_B
+// }
+
+/** Update Edit */
+  const updatecard = (e)=>{
+    let list = e.dataset.kanantype === "ความผิด" ? createDropdownFromOBJECT_A() : createDropdownFromOBJECT_B()
+    console.log(e.dataset.kanantype)
+    // Check 
+    if(e.dataset.kanantype === "ความผิด"){
+      $( "#radio-one" ).prop( "checked", false );
+      $( "#radio-two" ).prop( "checked", true );
+    }else if(e.dataset.kanantype === "ความดี"){
+      $( "#radio-one" ).prop( "checked", true );
+      $( "#radio-two" ).prop( "checked", false );    
+    }
+
+      if(e.dataset.imgstd){
+        $("#textifimg").removeClass("d-none");
+          $("#imgproDetail").attr("src", e.dataset.imgstd)
+          $("#titleModalImg").html(e.dataset.title)
+
+      }else {
+        $("#textifimg").addClass("d-none");
+      }
+
+      const idlist = e.dataset.idlist
+      const kanan = e.dataset.kanan
+      const datekanan = e.dataset.datekanan
+      const title = e.dataset.title
+      const detial = e.dataset.detial
+
+        $("#idlist").val(idlist) 
+        $("#datekanan").val(datekanan)
+        $("#typetitle").val(title)
+        $("#listkanan").val(detial)
+        $("#scorebad").val(kanan)
+  }
+
+   
+
+/** ฟังก์ชั่นสำหรับ ลบ ข้อมูล   */
+    const delcard = (e)=>{
+        // console.log(e.parentNode.parentNode.parentNode)
+        const idlist = e.dataset.idlist
+        google.script.run.withSuccessHandler((res)=>{
+          console.log(res)
+          setKanan_s(res[0].kananlist)
+  
+          objSearchincrud = res[0].kananlist
+        }).deleterowKanan(idlist)
+        
+        e.parentNode.parentNode.parentNode.parentNode.remove()
+    }
+
+
+$(function(){
+    var thaiYear = function (ct) {
+        var leap=3;  
+        var dayWeek=["พฤ.", "ศ.", "ส.", "อา.","จ.", "อ.", "พ."];  
+        if(ct){  
+            var yearL=new Date(ct).getFullYear()-543;  
+            leap=(((yearL % 4 == 0) && (yearL % 100 != 0)) || (yearL % 400 == 0))?2:3;  
+            if(leap==2){  
+                dayWeek=["ศ.", "ส.", "อา.", "จ.","อ.", "พ.", "พฤ."];  
+            }  
+        }              
+        this.setOptions({  
+            i18n:{ th:{dayOfWeek:dayWeek}},dayOfWeekStart:leap,  
+        })                
+    };
+     
+    $("#datekanan").datetimepicker({
+        timepicker:false,  // กำหนด ไม่แสดงตัวเลือกเวลา  
+        format:'d-m-Y h:i',  // กำหนดรูปแบบวันที่ ที่ใช้ เป็น 00-00-0000  
+        // dateFormat: "d-m-Y",
+        // timeFormat:  "hh:mm:ss",
+        lang:'th',  // แสดงภาษาไทย  
+        yearStart:1914,  // ช่วงเลือกปีเริ่มต้น ใช้ ค.ศ.  
+        yearOffset:543,  // ใช้ปี พ.ศ. บวก 543 เพิ่มเข้าไปในปี ค.ศ       
+        onShow:thaiYear,
+        onChangeMonth:thaiYear,
+        closeOnDateSelect:true, // ปิด ถ้าเลือกวันที่แล้ว   
+        scrollMonth : false,
+        scrollInput : false,
+    });  
+})
+
+
+/**   ชุดที่แปลง Number เป็นสตริงที่มีคอมม่าคั่น */
+function FormatCurrency(ctrl) {
+            //Check if arrow keys are pressed - we want to allow navigation around textbox using arrow keys
+            if (event.keyCode == 37 || event.keyCode == 38 || event.keyCode == 39 || event.keyCode == 40) {
+                return;
+            }
+
+            var val = ctrl.value;
+
+            val = val.replace(/,/g, "")
+            ctrl.value = "";
+            val += '';
+            x = val.split('.');
+            x1 = x[0];
+            x2 = x.length > 1 ? '.' + x[1] : '';
+
+            var rgx = /(\d+)(\d{3})/;
+
+            while (rgx.test(x1)) {
+                x1 = x1.replace(rgx, '$1' + ',' + '$2');
+            }
+            ctrl.value = x1 + x2;
+        }
+
+        function CheckNumeric() {
+            return event.keyCode >= 48 && event.keyCode <= 57 || event.keyCode == 46;
+        }
+
+
+/**  ส่วน Login และเปลี่ยนหน้า */
+const pwShowHide = document.querySelectorAll(".showHidePw")
+const pwFields = document.querySelectorAll('input[type="password"]')
+            /**  show/hide password and change icon **/
+            pwShowHide.forEach(eyeIcon =>{
+                eyeIcon.addEventListener("click", ()=>{
+                    pwFields.forEach(pwField =>{
+                        if(pwField.type ==="password"){
+                            pwField.type = "text";
+
+                            pwShowHide.forEach(icon =>{
+                                icon.classList.replace("fa-eye-slash", "fa-eye");
+                            })
+                        }else{
+                            pwField.type = "password";
+
+                            pwShowHide.forEach(icon =>{
+                                icon.classList.replace("fa-eye", "fa-eye-slash");
+                            })
+                        }
+                    }) 
+                })
+            })
+
+
+//สลับหน้า
+    const pageChange = (page1) => {
+    console.log("node id = "+page1)
+      var idElement = [...document.querySelectorAll('section')].forEach(elm => {
+        // console.log(elm.id)
+          if(elm.id===page1 ){
+            document.getElementById(elm.id).style.display = "block"
+            }else{
+              document.getElementById(elm.id).style.display = "none"
+          }
+      });
+    }            
+
+// Login
+function login(e){
+  event.preventDefault()
+  const un_name = e.user.value
+  const pw_name = e.pwdd.value
+
+  google.script.run.withSuccessHandler((resCheck)=>{
+    try{
+        if(resCheck.status){
+          $("#displayname").html(resCheck.displayName)
+          $("#showProfileName").html(resCheck.displayName)
+          document.getElementById("imgprofile").src = resCheck.pic
+          Swal.fire({
+            position: 'center',
+            icon: 'success',
+            title: 'Login Success',
+            showConfirmButton: false,
+            timer: 1500
+          })
+          pageChange("kananPage")
+        }else{
+          Swal.fire({
+            position: 'center',
+            icon: 'warning',
+            title: 'Login Failed',
+            showConfirmButton: false,
+            timer: 1500
+          })
+           
+        }
+    }catch(err){
+      console.log(err)
+    }
+
+
+  }).checkLogin(un_name,pw_name)
+
+
+}
+
+function logout(){
+        google.script.run.withSuccessHandler(function(url){
+          window.open(url,'_top');
+        }).getScriptURL();  
+}
+
+function openprofile(){
+  $("#btnProfile").click()
+}
+
+/**  print Report  */
+function runReport(){
+  event.preventDefault()
+  pageChange("report")
+const divIMGShow = document.getElementById('setprint')
+    const screenshotTarget = divIMGShow;
+    html2canvas(screenshotTarget).then((canvas)=>{
+      const base64image = canvas.toDataURL("image/png");
+      google.script.run.withSuccessHandler().sendNotify(base64image) 
+
+    });   
+
+  window.print()
+  pageChange("kananPage")
+
+}
+
+
+
+/** ค้นหาจาก พฤติกรรมที่ให้หรือตัดคะแนน  */
+const searchList = document.getElementById("searchList")
+searchList.addEventListener('keyup', (e) => {
+  console.log(objSearchincrud)
+  
+  let listFilter = objSearchincrud.filter((f) => {
+    let searchinputVal = searchList.value
+    return (
+      f.title.toLowerCase().includes(searchinputVal)
+    );
+  });
+
+    console.log(listFilter)
+    setKanan_s(listFilter)
+  // showMenuList(listFilter)
+
+})
+
+/** function แปลงลิงค์ภาพ เป็น Base64 **/
+   const getBase64FromUrl = async (url) => {
+    const data = await fetch(url);
+    const blob = await data.blob();
+    //สร้าง promise ทำการแปลงลิงค์ก่อน แล้วรอจนเรียบร้อย ก่อน แสดงผล ใน src
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(blob); 
+      reader.onloadend = () => {
+        const b64data = reader.result;   
+        resolve(b64data);
+        // console.log("show"+b64data)
+     document.getElementById("imglogo").src = b64data;   //ตำแหน่งรูปภาพ
+
+      }
+    });
+  }
+
+  function resetForm(){
+      document.getElementById("formkanan").reset();
+
+            $("#idlist").val("") 
+            $("#sumkananA").html("")
+            $("#sumkananB").html("")
+
+      document.getElementById("picShow").src = 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/User-avatar.svg/1024px-User-avatar.svg.png'
+            $(".showListKanan").html("")
+            $("#progressBar").html("")
+  }
+
+</script>
