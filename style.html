@@ -1,0 +1,484 @@
+<style>
+
+@import url('https://fonts.googleapis.com/css2?family=Niramit&display=swap');
+
+:root {
+  --txtshow: ##075353;
+  --bgshowtxt: ##e0e0e0;
+  --bgcardlist: #ECF8F9;
+}
+
+body{
+  font-family: 'Niramit', sans-serif;
+}
+
+.progress {
+  background-color: #A2CDB0;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+#showText1, #showText2{
+  color: var(--txtshow);
+  font-weight: bold;
+}
+#picShow, #picprofile{
+    width: 100px;
+    height: 100px;
+    border-radius: 50px;
+    border: 1px solid #116A7B; 
+    object-fit: cover;
+}
+
+.list-group-item {
+  width: 100%;
+  transition: width 0.7s;
+}
+.list-group-item:hover{
+  /* background-color: #FFE194; */
+  width: 103%;
+}
+
+.form-control:focus{
+  box-shadow: none;
+  border: solid 2px #00FFCA;
+  border-radius: 20px;
+}
+
+.form-select:focus{
+    border: solid 2px #00FFCA;
+  box-shadow: none;
+}
+
+label{
+  color: green;
+}
+
+.listkananset{
+    height: 606.41px;
+    overflow: auto;
+}
+
+
+* {
+  scrollbar-width: auto;
+  scrollbar-color: #f1096d #ffffff;
+}
+
+/* Chrome, Edge, and Safari */
+*::-webkit-scrollbar {
+  width: 16px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #ffffff;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #f1096d;
+  border-radius: 10px;
+  border: 3px solid #ffffff;
+}
+
+
+
+
+
+.card{
+    min-height: 230px;
+    width: 100%;
+    /* box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); */
+    border-color: green;
+    background-color: #EEEEEE;
+}
+
+.boxkanan{
+    padding-left: 5px;
+}
+
+.card a.btn{
+    margin-top: 10px;
+}
+.card.content{
+    height: 740px;
+    background-color: var(--bgcardlist);
+}
+.card.cardtable{
+    height: 740px;
+    background-color: var(--bgcardlist);
+}
+.cardstatic{
+    height: 60px;
+
+}
+
+#page-content{
+    margin-top:10px;
+    height:534px;
+    overflow-x: hidden; /* Hide horizontal scrollbar */
+    overflow-y: scroll; /* Add vertical scrollbar */
+}
+
+.showList{
+  height: 60px;
+  background: var(--bgshowtxt);
+}
+showListKanan{
+}
+
+.submitform .btn-primary {
+  font-size: 15px;
+  color: #025464;
+  letter-spacing: 3px;
+  width: 120px;
+  line-height: 15px;
+  border: 2px solid #025464;
+  border-radius: 40px;
+  background: transparent;
+  transition: all 0.3s ease 0s;
+}
+
+.submitform .btn-primary:hover {
+  color: #FFF;
+  background: #025464;
+  border: 2px solid #025464;
+}
+
+
+
+
+
+
+
+/* signup and login form */
+.loginBox{
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  width: 350px;
+  min-height: 200px;
+  background: #40128B;
+  border-radius: 10px;
+  padding: 40px;
+  box-sizing: border-box
+}
+.user{
+  margin: 0 auto;
+  display: block;
+  margin-bottom: 20px
+}
+h3{
+  margin: 0;
+  padding: 0 0 20px;
+  color: #418aed; 
+  text-align: center
+}
+.loginBox input{
+  //width: 100%;
+  margin-bottom: 20px
+}
+.loginBox input[type="text"],
+.loginBox input[type="email"],
+.loginBox input[type="password"]{
+  border: none;
+  border-bottom: 2px solid #262626;
+  outline: none;
+  height: 40px;
+  width: 100%;
+  color: #fff;
+  background: transparent;
+  font-size: 16px;
+  padding-left: 20px;
+  box-sizing: border-box
+}
+.loginBox input[type="text"]:hover,
+.loginBox input[type="email"]:hover, 
+.loginBox input[type="password"]:hover{
+  color: #F0F3FA;
+  border: 1px solid #42F3FA;
+  box-shadow: 0 0 5px rgba(0,255,0,.3), 
+              0 0 10px rgba(0,255,0,.2), 
+              0 0 15px rgba(0,255,0,.1), 
+              0 2px 0 black
+}
+.loginBox input[type="text"]:focus,
+.loginBox input[type="email"]:focus, 
+.loginBox input[type="password"]:focus{
+  border-bottom: 2px solid #42F3FA
+}
+.inputBox input::placeholder {
+        color: #ccc;
+        opacity: 0.8;
+} 
+.inputBox{
+  position: relative
+}
+.inputBox span{
+  position: absolute;
+  top: 10px;
+  color: #eee
+}
+.inputBox i{
+    position: absolute;
+    color: #418aed; 
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    padding: 10px;
+}
+.inputBox i.showHidePw{
+    right: 0;
+    cursor: pointer;
+}
+.loginBox input[type="submit"]{
+  border: none;
+  outline: none;
+  height: 40px;
+  width: 100%;
+  font-size: 16px;
+  background: #FF0060; 
+  color: #fff;
+  border-radius: 20px;
+  cursor: pointer
+}
+.loginBox a{
+  color: #aaa;
+  font-weight: bold;
+  text-decoration: none;
+  text-align: center;
+  display: block
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+body{
+    margin-top:20px;
+    color: #484b51;
+}
+.text-secondary-d1 {
+    color: #728299!important;
+}
+.page-header {
+    margin: 0 0 1rem;
+    padding-bottom: 1rem;
+    padding-top: .5rem;
+    border-bottom: 1px dotted #e2e2e2;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-pack: justify;
+    justify-content: space-between;
+    -ms-flex-align: center;
+    align-items: center;
+}
+.page-title {
+    padding: 0;
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 300;
+}
+.brc-default-l1 {
+    border-color: #dce9f0!important;
+}
+
+.ml-n1, .mx-n1 {
+    margin-left: -.25rem!important;
+}
+.mr-n1, .mx-n1 {
+    margin-right: -.25rem!important;
+}
+.mb-4, .my-4 {
+    margin-bottom: 1.5rem!important;
+}
+
+hr {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    border: 0;
+    border-top: 1px solid rgba(0,0,0,.1);
+}
+
+.text-grey-m2 {
+    color: #888a8d!important;
+}
+
+.text-success-m2 {
+    color: #86bd68!important;
+}
+
+.font-bolder, .text-600 {
+    font-weight: 600!important;
+}
+
+.text-110 {
+    font-size: 110%!important;
+}
+.text-blue {
+    color: #478fcc!important;
+}
+.pb-25, .py-25 {
+    padding-bottom: .75rem!important;
+}
+
+.pt-25, .py-25 {
+    padding-top: .75rem!important;
+}
+.bgc-default-tp1 {
+    background-color: rgba(121,169,197,.92)!important;
+}
+.bgc-default-l4, .bgc-h-default-l4:hover {
+    background-color: #f3f8fa!important;
+}
+.page-header .page-tools {
+    -ms-flex-item-align: end;
+    align-self: flex-end;
+}
+
+.btn-light {
+    color: #757984;
+    background-color: #f5f6f9;
+    border-color: #dddfe4;
+}
+.w-2 {
+    width: 1rem;
+}
+
+.text-120 {
+    font-size: 120%!important;
+}
+.text-primary-m1 {
+    color: #4087d4!important;
+}
+
+.text-danger-m1 {
+    color: #dd4949!important;
+}
+.text-blue-m2 {
+    color: #68a3d5!important;
+}
+.text-150 {
+    font-size: 150%!important;
+}
+.text-60 {
+    font-size: 60%!important;
+}
+.text-grey-m1 {
+    color: #7b7d81!important;
+}
+.align-bottom {
+    vertical-align: bottom!important;
+}
+@media print
+{
+    .page-header{
+        display: none;
+    }
+
+}
+
+@media print {
+   .col-sm-1, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9, .col-sm-10, .col-sm-11, .col-sm-12 {
+        float: left;
+   }
+   .col-sm-12 {
+        width: 100%;
+   }
+   .col-sm-11 {
+        width: 91.66666667%;
+   }
+   .col-sm-10 {
+        width: 83.33333333%;
+   }
+   .col-sm-9 {
+        width: 75%;
+   }
+   .col-sm-8 {
+        width: 66.66666667%;
+   }
+   .col-sm-7 {
+        width: 58.33333333%;
+   }
+   .col-sm-6 {
+        width: 50%;
+   }
+   .col-sm-5 {
+        width: 41.66666667%;
+   }
+   .col-sm-4 {
+        width: 33.33333333%;
+   }
+   .col-sm-3 {
+        width: 25%;
+   }
+   .col-sm-2 {
+        width: 16.66666667%;
+   }
+   .col-sm-1 {
+        width: 8.33333333%;
+   }
+}
+
+.switch-field {
+	display: flex;
+	margin-bottom: 14px;
+	overflow: hidden;
+  justify-content: center;
+}
+
+.switch-field input {
+	position: absolute !important;
+	clip: rect(0, 0, 0, 0);
+	height: 1px;
+	width: 1px;
+	border: 0;
+	overflow: hidden;
+}
+
+.switch-field label {
+	background-color: #e4e4e4;
+	color: rgba(0, 0, 0, 0.6);
+	font-size: 14px;
+	line-height: 1;
+	text-align: center;
+	padding: 8px 16px;
+	margin-right: -1px;
+	border: 1px solid rgba(0, 0, 0, 0.2);
+	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px rgba(255, 255, 255, 0.1);
+	transition: all 0.1s ease-in-out;
+}
+
+.switch-field label:hover {
+	cursor: pointer;
+}
+
+.switch-field input:checked + label {
+	background-color: #a5dc86;
+	box-shadow: none;
+}
+
+.switch-field label:first-of-type {
+	border-radius: 4px 0 0 4px;
+
+}
+
+.switch-field label:last-of-type {
+	border-radius: 0 4px 4px 0;
+}
+
+
+
+</style>
