@@ -5,7 +5,7 @@ Ver.01
 googleshee (5 Sheets)
 https://docs.google.com/spreadsheets/d/1wVxvMsGhur0ltfKM2aDgigSYslJbHDVLsKamnYF3l7A/copy
 
-Ver.02
+Ver.02 (Dashboard Plus & Searh Data Student )
 https://docs.google.com/spreadsheets/d/1Jco5S32tw-VWbH0gpZX6Oi66iyRPsu1st6YBYuAf5V8/copy
 
 -มีระบบ CRUD ในตัว 
